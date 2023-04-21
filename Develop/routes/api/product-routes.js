@@ -1,7 +1,7 @@
 const router = require('express').Router();
 // const { Model } = require('sequelize/types');
-// const { all } = require('sequelize/types/lib/operators');
-// const { canTreatArrayAsAnd } = require('sequelize/types/lib/utils');
+const { all } = require('sequelize/types/lib/operators');
+const { canTreatArrayAsAnd } = require('sequelize/types/lib/utils');
 const { Product, Category, Tag, ProductTag } = require('../../models');
 
 // The `/api/products` endpoint
@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
     const allProducts = await Product.findAll({
       include: [{ Model: Category}, { Model: Tag }],
     });
-    res.status(200).json(allProducts) 
+    res.status(200).json({ message: 'success'}) 
   } catch (err) {
     res.status(500).json(err);
   }
@@ -33,7 +33,7 @@ router.get('/:id', async (req, res) => {
       res.status(404).json({message: 'no product with that id found'});
       return;
     }
-    res.status(200).json(oneProduct);
+    res.status(200).json({message: 'It worked!'});
   } catch (err) {
     res.status(500).json(err);
   }
@@ -41,15 +41,7 @@ router.get('/:id', async (req, res) => {
 
 // create new product
 
-// router.post('/', async (req, res) => {
-//   try {
-//     const newProduct = await Product.create(req.body);
-//   }); 
-//   res.status(200).json(newProduct);
-// } catch (err) {
-
-
-// router.post('/', async (req, res) => {
+router.post('/', async (req, res) => {
   /* req.body should look like this...
     {
       product_name: "Basketball",
@@ -58,27 +50,36 @@ router.get('/:id', async (req, res) => {
       tagIds: [1, 2, 3, 4]
     }
   */
-//   const newProduct  = Product.create(req.body)
-//     .then((product) => {
-//       // if there's product tags, we need to create pairings to bulk create in the ProductTag model
-//       if (req.body.tagIds.length) {
-//         const productTagIdArr = req.body.tagIds.map((tag_id) => {
-//           return {
-//             product_id: product.id,
-//             tag_id,
-//           };
-//         });
-//         return ProductTag.bulkCreate(productTagIdArr);
-//       }
-//       // if no product tags, just respond
-//       res.status(200).json(product);
-//     })
-//     .then((productTagIds) => res.status(200).json(productTagIds))
-//     .catch((err) => {
-//       console.log(err);
-//       res.status(400).json(err);
-//     });
-// });
+  try {
+    // .then((product) => {
+      // if there's product tags, we need to create pairings to bulk create in the ProductTag model
+      const newProduct  = await Product.Create(req.body) ({
+        include: [{ model: ProductTag }]
+      });
+
+      if (req.body.tagIds.length) {
+        const productTagIdArr = req.body.tagIds.map((tag_id) => {
+          return {
+            product_id: product.id,
+            tag_id,
+          };
+        });
+        const productTagIds = await ProductTag.bulkCreate(productTagIdArr);
+        res.status(200).json(newProduct);
+        // return ProductTag.bulkCreate(productTagIdArr);
+      } else { 
+        res.status(200).json(newProduct);
+      }
+    } catch (err) {
+      // if no product tags, just respond
+      res.status(200).json(newProduct);
+    }
+    });
+    // .then((productTagIds) => res.status(200).json(productTagIds))
+    // .catch((err) => {
+    //   console.log(err);
+    //   res.status(400).json(err);
+    // });
 
 // update product
 router.put('/:id', (req, res) => {
@@ -122,8 +123,13 @@ router.put('/:id', (req, res) => {
     });
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
   // delete one product by its `id` value
+  try {
+    const deleteProduct = await Product.destroy({
+
+    })
+  }
 });
 
 module.exports = router;
