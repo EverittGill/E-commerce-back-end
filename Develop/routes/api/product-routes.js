@@ -1,7 +1,7 @@
 const router = require('express').Router();
 // const { Model } = require('sequelize/types');
-const { all } = require('sequelize/types/lib/operators');
-const { canTreatArrayAsAnd } = require('sequelize/types/lib/utils');
+// const { all } = require('sequelize/types/lib/operators');
+// const { canTreatArrayAsAnd } = require('sequelize/types/lib/utils');
 const { Product, Category, Tag, ProductTag } = require('../../models');
 
 // The `/api/products` endpoint
@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
     const allProducts = await Product.findAll({
       include: [{ Model: Category}, { Model: Tag }],
     });
-    res.status(200).json({ message: 'success'}) 
+    res.status(200).json(allProducts) 
   } catch (err) {
     res.status(500).json(err);
   }
@@ -33,7 +33,7 @@ router.get('/:id', async (req, res) => {
       res.status(404).json({message: 'no product with that id found'});
       return;
     }
-    res.status(200).json({message: 'It worked!'});
+    res.status(200).json(oneProduct);
   } catch (err) {
     res.status(500).json(err);
   }
@@ -126,10 +126,21 @@ router.put('/:id', (req, res) => {
 router.delete('/:id', async (req, res) => {
   // delete one product by its `id` value
   try {
-    const deleteProduct = await Product.destroy({
-
-    })
+    const deleteProduct = await Product.destroy({ 
+      where: {
+        id: req.params.id
+      }
+      
+    });
+    if (!deleteProduct) {
+      res.status(404).json({ message: "there was no product with that ID found"});
+      return;
+    }
+    res.status(200).json({ message: "Success! It is gone."});
+  } catch (err) {
+    res.status(500).json(err);
   }
 });
+  
 
 module.exports = router;
